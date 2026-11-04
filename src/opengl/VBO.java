@@ -20,11 +20,11 @@ public class VBO {
     public void createVBO(float[] vertices, float[] texCoords) {
 
         if (vertices.length % 3 != 0 || texCoords.length % 2 != 0) {
-            throw new IllegalArgumentException("Invalid vertex or texture coordinate array");
+            throw new IllegalArgumentException("err");
         }
 
         if (vertices.length / 3 != texCoords.length / 2) {
-            throw new IllegalArgumentException("Vertex and texture coordinate counts do not match");
+            throw new IllegalArgumentException("err");
         }
 
         // Delete old buffers
@@ -62,22 +62,22 @@ public class VBO {
             return;
         }
 
-        // Vertex positions
+      
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
 
         GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
         GL11.glVertexPointer(3, GL11.GL_FLOAT, 0, 0L);
 
-        // Texture coordinates
+        
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, textureVboId);
 
         GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
         GL11.glTexCoordPointer(2, GL11.GL_FLOAT, 0, 0L);
 
-        // Draw
+       
         GL11.glDrawArrays(GL11.GL_QUADS, 0, vertexCount);
 
-        // Cleanup
+        
         GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
         GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
 
