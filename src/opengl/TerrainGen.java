@@ -18,7 +18,7 @@ public class TerrainGen {
 	}
 	
 	public int getTerrainHeight(int x, int z) {
-	    double noiseValue = noise.getNoise2D( x*0.1, z*0.1);
+	    double noiseValue = noise.getNoise2D( x*0.9, z*0.9);
 	    return (int)(noiseValue *10+20);
 	}
 }

@@ -43,7 +43,7 @@ public class Renderer {
 
     float blocks[][][] = new float[1002][1002][1002];
     
-    float chunks[][][] = new float[50][50][50];
+    int chunks[][] = new int[50][50];
 
     int offset = 50;
     
@@ -78,13 +78,21 @@ public class Renderer {
 
 
         for (int y = 0; y < 1000; y++) {
-          for (int z = 0; z < 1000; z++) {
-             for (int x = 0; x < 1000; x++) {
-                    blocks[x][y][z] = 0;
-
-                }
+            for (int z = 0; z < 1000; z++) {
+               for (int x = 0; x < 1000; x++) {
+                      blocks[x][y][z] = 0;
+                      
+                  }
             }
         }
+        
+        
+            for (int z = 0; z < 49; z++) {
+               for (int x = 0; x < 49; x++) {
+            	   chunks[z][x] = 0;
+               }
+                  }
+    	
     }
 
 
@@ -94,10 +102,10 @@ public class Renderer {
         // Build the terrain mesh once
 
     	chunk.generatate();
-    	chunk2.generatate();
-    	chunk3.generatate();
-    	chunk4.generatate();
-    	chunk5.generatate();
+    	//chunk2.generatate();
+    	//chunk3.generatate();
+    	//chunk4.generatate();
+    	//chunk5.generatate();
     	
 
         GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -133,10 +141,10 @@ public class Renderer {
 
 
             chunk.render();
-            chunk2.render();
-            chunk3.render();
-            chunk4.render();
-            chunk5.render();
+           // chunk2.render();
+           // chunk3.render();
+           // chunk4.render();
+           // chunk5.render();
 
 
             Display.update();
@@ -262,12 +270,13 @@ public class Renderer {
 
             if(blockType.equals("grass_block")) {
 
+            	
             	addFace(targetChunk.grassTopVertices, targetChunk.grassTopTexCoords,
                     x-0.5f,y+0.5f,z+0.5f,
                     x+0.5f,y+0.5f,z+0.5f,
                     x+0.5f,y+0.5f,z-0.5f,
                     x-0.5f,y+0.5f,z-0.5f);
-
+            	
             } else {
 
                 addFace(v, t,

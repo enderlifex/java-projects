@@ -4,6 +4,8 @@ package opengl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
 public class Chunk {
 
     Renderer ren;
@@ -28,6 +30,8 @@ public class Chunk {
 
     List<Float> stoneVertices = new ArrayList<>();
     List<Float> stoneTexCoords = new ArrayList<>();
+    
+    int chunkSize = 256;
 
     public Chunk(int x, int y, int z, Renderer ren) {
 
@@ -40,6 +44,9 @@ public class Chunk {
 
     public void generatate() {
 
+    	
+    	ren.chunks[xChunk][zChunk] = 1;
+    	
         dirtVertices.clear();
         dirtTexCoords.clear();
 
@@ -54,9 +61,9 @@ public class Chunk {
 
         
 
-        for (int z = zChunk; z < zChunk + 16; z++) {
+        for (int z = zChunk; z < zChunk + chunkSize; z++) {
 
-            for (int x = xChunk; x < xChunk + 16; x++) {
+            for (int x = xChunk; x < xChunk + chunkSize; x++) {
 
                 int height = ren.terraingen.getTerrainHeight(x, z);
 
@@ -76,9 +83,9 @@ public class Chunk {
 
        
 
-        for (int z = zChunk; z < zChunk + 16; z++) {
+        for (int z = zChunk; z < zChunk + chunkSize; z++) {
 
-            for (int x = xChunk; x < xChunk + 16; x++) {
+            for (int x = xChunk; x < xChunk + chunkSize; x++) {
 
                 int height = ren.terraingen.getTerrainHeight(x, z);
 
@@ -129,17 +136,25 @@ public class Chunk {
 
     public void render() {
 
+    	GL11.glColor3f(0.76f, 0.76f, 0.76f);
         ren.dirtTexture.bind();
         dirtVBO.renderVBO();
-
+        GL11.glColor3f(1f, 1f, 1f);
+        
+        GL11.glColor3f(0.76f, 0.76f, 0.76f);
         ren.grassSideTexture.bind();
         grassVBO.renderVBO();
-
+        GL11.glColor3f(1f, 1f, 1f);
+        
+        GL11.glColor3f(0.60f, 0.80f, 0.35f);
         ren.grassTopTexture.bind();
         grassTopVBO.renderVBO();
-
+        GL11.glColor3f(1f, 1f, 1f);
+        
+        GL11.glColor3f(0.76f, 0.76f, 0.76f);
         ren.stoneTexture.bind();
         stoneVBO.renderVBO();
+        GL11.glColor3f(1f, 1f, 1f);
     }
 
     
