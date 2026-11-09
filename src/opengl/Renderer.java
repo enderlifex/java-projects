@@ -30,6 +30,8 @@ public class Renderer {
     float sensitivity = 0.15f;
     long lastFrame = System.nanoTime();
     
+    int previousChunkX = Integer.MIN_VALUE;
+    int previousChunkZ = Integer.MIN_VALUE;
     
     //raycast
     int dx =0;
@@ -43,26 +45,31 @@ public class Renderer {
 
     float blocks[][][] = new float[1002][1002][1002];
     
-    int chunks[][] = new int[50][50];
+    int chunks[][] = new int[200][200];
 
     int offset = 50;
     
-    Chunk chunk = new Chunk(0, 0, 0,this);
-    Chunk chunk2 = new Chunk(0, 0, 16,this);
-    Chunk chunk3 = new Chunk(16, 0, 0,this);
-    Chunk chunk4 = new Chunk(16, 0, 16,this);
-    Chunk chunk5 = new Chunk(16, 0, 0,this);
+    Chunk chunk = new Chunk(this);
+    Chunk chunk2 = new Chunk(this);
+    Chunk chunk3 = new Chunk(this);
+    Chunk chunk4 = new Chunk(this);
+    Chunk chunk5 = new Chunk(this);
 
 
     Texture dirtTexture;
     Texture grassSideTexture;
     Texture grassTopTexture;
     Texture stoneTexture;
-
+    Texture flowerRoseTexture;
+    Texture sandTexture;
 
 
     Textures textures = new Textures();
     TerrainGen terraingen = new TerrainGen();
+    
+    
+    int CurrentChunkX;
+    int CurrentChunkZ;
 
 
     public Renderer() {
@@ -71,10 +78,14 @@ public class Renderer {
         grassSideTexture = textures.loadTexture("grass_side.png");
         grassTopTexture = textures.loadTexture("grass_top.png");  
         stoneTexture = textures.loadTexture("stone.png");
+        flowerRoseTexture = textures.loadTexture("flower_rose.png");
+        sandTexture = textures.loadTexture("sand.png");
         dirtTexture.setTextureFilter(GL11.GL_NEAREST);
         grassSideTexture.setTextureFilter(GL11.GL_NEAREST);
         grassTopTexture.setTextureFilter(GL11.GL_NEAREST);
         stoneTexture.setTextureFilter(GL11.GL_NEAREST);
+        flowerRoseTexture.setTextureFilter(GL11.GL_NEAREST);
+        sandTexture.setTextureFilter(GL11.GL_NEAREST);
 
 
         for (int y = 0; y < 1000; y++) {
@@ -100,25 +111,26 @@ public class Renderer {
 
 
         // Build the terrain mesh once
+    	chunk.generatate(0, 0, 0);
+    	
 
-    	chunk.generatate();
-    	//chunk2.generatate();
-    	//chunk3.generatate();
-    	//chunk4.generatate();
-    	//chunk5.generatate();
+    	
     	
 
         GL11.glEnable(GL11.GL_TEXTURE_2D);
 
         GL11.glEnable(GL11.GL_DEPTH_TEST);
-
+        GL11.glEnable(GL11.GL_BLEND);
         GL11.glEnable(GL11.GL_CULL_FACE);
 
         GL11.glCullFace(GL11.GL_BACK);
 
 
         while (!Display.isCloseRequested()) {
+        	
 
+        	CurrentChunkX = (int) Math.floor(cameraX / 16.0);
+        	CurrentChunkZ = (int) Math.floor(cameraZ / 16.0);
 
             // Set background colour
 
@@ -141,10 +153,6 @@ public class Renderer {
 
 
             chunk.render();
-           // chunk2.render();
-           // chunk3.render();
-           // chunk4.render();
-           // chunk5.render();
 
 
             Display.update();
@@ -163,6 +171,10 @@ public class Renderer {
         chunk.grassTopVBO.deleteVBO();
 
         chunk.stoneVBO.deleteVBO();
+        
+        chunk.flowerVBO.deleteVBO();
+        
+        chunk.sandVBO.deleteVBO();
         
         chunk.cleanup();
         chunk2.cleanup();
@@ -186,7 +198,54 @@ public class Renderer {
 
     }
 
+    public void drawFlower(Chunk targetChunk,float x, float y, float z, String blockType) {
+    	
+    	   int bx = (int)x + offset;
+           int by = (int)y + offset;
+           int bz = (int)z + offset;
 
+           List<Float> v;
+           List<Float> t;
+    	
+
+           if (blockType.equals("flower")) {
+               v = targetChunk.flowerVertices;
+               t = targetChunk.flowerTexCoords;
+
+           } else {
+        	   v = null;
+               t = null;
+           }
+           
+           
+
+            addFace(v, t,
+            		 x-0.5f, y-0.5f, z-0.5f,  //bottom left
+            		    x+0.5f, y-0.5f, z+0.5f,  //bottom right
+            		    x+0.5f, y+0.5f, z+0.5f,  //top right
+            		    x-0.5f, y+0.5f, z-0.5f   //top left
+            		    );  
+
+           
+
+
+           //left
+
+
+
+               addFace(v, t,
+            		   x+0.5f, y-0.5f, z-0.5f,  
+            		    x-0.5f, y-0.5f, z+0.5f,  
+            		    x-0.5f, y+0.5f, z+0.5f,  
+            		    x+0.5f, y+0.5f, z-0.5f
+            		    );  
+
+           }
+           
+           
+           
+    	
+    
     public void drawCube(Chunk targetChunk, float x, float y, float z, String blockType) {
 
         int bx = (int)x + offset;
@@ -206,7 +265,12 @@ public class Renderer {
             v = targetChunk.grassSideVertices;
             t = targetChunk.grassSideTexCoords;
 
-        } else {
+        }else if (blockType.equals("sand_block")) {
+        	 v = targetChunk.sandVertices;
+             t = targetChunk.sandTexCoords;
+        }
+        
+        else {
             v = targetChunk.stoneVertices;
             t = targetChunk.stoneTexCoords;
         }
