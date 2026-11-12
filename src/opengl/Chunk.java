@@ -42,7 +42,7 @@ public class Chunk {
     List<Float> sandVertices = new ArrayList<>();
     List<Float> sandTexCoords = new ArrayList<>();
     
-    int chunkSize = 700;
+    int chunkSize = 16;  //700
 
     public Chunk(Renderer ren) {
 
@@ -57,7 +57,7 @@ public class Chunk {
         this.yChunk = y0;
         this.zChunk = z0;
     	
-    	ren.chunks[xChunk][zChunk] = 1;
+    	
     	
         dirtVertices.clear();
         dirtTexCoords.clear();
@@ -79,19 +79,17 @@ public class Chunk {
 
         
 
+     
         for (int z = zChunk; z < zChunk + chunkSize; z++) {
 
             for (int x = xChunk; x < xChunk + chunkSize; x++) {
 
                 int height = ren.terraingen.getTerrainHeight(x, z);
-                ren.blocks[x + ren.offset][height + ren.offset][z + ren.offset] = 1;
 
-                for (int k = 1; k <= 3; k++) {
-                    ren.blocks[x + ren.offset][height - k + ren.offset][z + ren.offset] = 1;
-                }
+                ren.addBlock(x, height, z);
 
-                for (int k = 4; k <= 13; k++) {
-                    ren.blocks[x + ren.offset][height - k + ren.offset][z + ren.offset] = 1;
+                for (int k = 1; k <= 13; k++) {
+                    ren.addBlock(x, height - k, z);
                 }
             }
         }
@@ -111,7 +109,7 @@ public class Chunk {
                 }
                
                 
-                if(sandSeed >= 25f && height <= 17f) {
+                if(sandSeed >= 25f && height < 18f) {
                 	ren.drawCube(this, x, height, z, "sand_block");
                 }else {
                 	ren.drawCube(this, x, height, z, "grass_block");
@@ -196,9 +194,10 @@ public class Chunk {
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glDisable(GL11.GL_ALPHA_TEST);
         
+        GL11.glColor3f(0.76f, 0.76f, 0.76f);
         ren.sandTexture.bind();
         sandVBO.renderVBO();
-        
+        GL11.glColor3f(1f, 1f, 1f);
         
         
     }

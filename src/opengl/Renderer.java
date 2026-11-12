@@ -2,8 +2,9 @@
 package opengl;
 
 import java.util.ArrayList;
-
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.lwjgl.input.Keyboard;
 
@@ -18,7 +19,8 @@ import org.newdawn.slick.opengl.Texture;
 
 public class Renderer {
 
-
+	public List<Chunk> chunkList = new ArrayList<>();
+	public int renderDistance = 8;
     //camera
 
     float cameraX = 0f;
@@ -43,11 +45,11 @@ public class Renderer {
     double rayZ;
     int hitRange = 4;
 
-    float blocks[][][] = new float[1002][1002][1002];
+    Set<BlockPos> blocks = new HashSet<>();
     
     int chunks[][] = new int[200][200];
 
-    int offset = 50;
+    int offset = 200;
     
     Chunk chunk = new Chunk(this);
     Chunk chunk2 = new Chunk(this);
@@ -66,6 +68,7 @@ public class Renderer {
 
     Textures textures = new Textures();
     TerrainGen terraingen = new TerrainGen();
+    Player p = new Player(this);
     
     
     int CurrentChunkX;
@@ -88,14 +91,6 @@ public class Renderer {
         sandTexture.setTextureFilter(GL11.GL_NEAREST);
 
 
-        for (int y = 0; y < 1000; y++) {
-            for (int z = 0; z < 1000; z++) {
-               for (int x = 0; x < 1000; x++) {
-                      blocks[x][y][z] = 0;
-                      
-                  }
-            }
-        }
         
         
             for (int z = 0; z < 49; z++) {
@@ -104,6 +99,7 @@ public class Renderer {
                }
                   }
     	
+            generateChunks();
     }
 
 
@@ -111,7 +107,7 @@ public class Renderer {
 
 
         // Build the terrain mesh once
-    	chunk.generatate(0, 0, 0);
+    	//chunk.generatate(0, 0, 0);
     	
 
     	
@@ -151,8 +147,8 @@ public class Renderer {
 
             applyCamera();
 
-
-            chunk.render();
+            updateChunks();
+            renderChunks(cameraX, cameraZ);
 
 
             Display.update();
@@ -176,11 +172,11 @@ public class Renderer {
         
         chunk.sandVBO.deleteVBO();
         
-        chunk.cleanup();
-        chunk2.cleanup();
-        chunk3.cleanup();
-        chunk4.cleanup();
-        chunk5.cleanup();
+        for (Chunk chunk : chunkList) {
+            chunk.cleanup();
+        }
+
+        chunkList.clear();
 
 
         Display.destroy();
@@ -200,9 +196,7 @@ public class Renderer {
 
     public void drawFlower(Chunk targetChunk,float x, float y, float z, String blockType) {
     	
-    	   int bx = (int)x + offset;
-           int by = (int)y + offset;
-           int bz = (int)z + offset;
+    	   
 
            List<Float> v;
            List<Float> t;
@@ -278,7 +272,7 @@ public class Renderer {
 
         //front
         
-        if(blocks[bx][by][bz+1] == 0) {
+        if (!isBlockAt((int)x, (int)y, (int)z + 1)) {
 
             addFace(v, t,
                 x-0.5f,y-0.5f,z+0.5f,
@@ -291,7 +285,7 @@ public class Renderer {
 
         //back
 
-        if(blocks[bx][by][bz-1] == 0) {
+        if (!isBlockAt((int)x, (int)y, (int)z - 1)) {
 
             addFace(v, t,
                 x+0.5f,y-0.5f,z-0.5f,
@@ -304,7 +298,7 @@ public class Renderer {
 
         //right
 
-        if(blocks[bx+1][by][bz] == 0) {
+        if (!isBlockAt((int)x + 1, (int)y, (int)z)) {
 
             addFace(v, t,
                 x+0.5f,y-0.5f,z+0.5f,
@@ -317,7 +311,7 @@ public class Renderer {
 
         //left
 
-        if(blocks[bx-1][by][bz] == 0) {
+        if (!isBlockAt((int)x - 1, (int)y, (int)z)) {
 
             addFace(v, t,
                 x-0.5f,y-0.5f,z-0.5f,
@@ -330,7 +324,7 @@ public class Renderer {
 
         //top
 
-        if(blocks[bx][by+1][bz] == 0) {
+        if (!isBlockAt((int)x, (int)y + 1, (int)z)) {
 
             if(blockType.equals("grass_block")) {
 
@@ -356,7 +350,7 @@ public class Renderer {
 
         //bottom
 
-        if(blocks[bx][by-1][bz] == 0) {
+        if (!isBlockAt((int)x, (int)y - 1, (int)z)) {
 
             if(blockType.equals("grass_block")) {
 
@@ -437,6 +431,13 @@ public class Renderer {
             cameraY -= movement;
         }
         
+        if(Keyboard.isKeyDown(Keyboard.KEY_EQUALS)) {
+        	cameraSpeed+=5;
+        }
+        if(Keyboard.isKeyDown(Keyboard.KEY_MINUS)) {
+        	cameraSpeed-=5;
+        }
+        
       
         
         //raycast 
@@ -502,6 +503,114 @@ public class Renderer {
 
         return array;
 
+    }
+    public void renderChunks(float playerX, float playerZ) {
+
+        int playerChunkX = (int) Math.floor(playerX / 16.0);
+        int playerChunkZ = (int) Math.floor(playerZ / 16.0);
+
+        for (Chunk chunk : chunkList) {
+
+            int chunkX = Math.floorDiv(chunk.xChunk, 16);
+            int chunkZ = Math.floorDiv(chunk.zChunk, 16);
+
+            int dx = chunkX - playerChunkX;
+            int dz = chunkZ - playerChunkZ;
+
+            int distanceSquared = dx * dx + dz * dz;
+
+            if (distanceSquared <= renderDistance * renderDistance) {
+                chunk.render();
+            }
+        }
+    }
+    
+    public void generateChunks() {
+
+        for (int x = -renderDistance; x <= renderDistance; x++) {
+            for (int z = -renderDistance; z <= renderDistance; z++) {
+
+                Chunk chunk = new Chunk(this);
+
+                chunk.generatate(
+                    x * 16,
+                    0,
+                    z * 16
+                );
+
+                chunkList.add(chunk);
+            }
+        }
+    }
+    public void updateChunks() {
+
+        int playerChunkX = (int) Math.floor(cameraX / 16.0);
+        int playerChunkZ = (int) Math.floor(cameraZ / 16.0);
+
+        if (playerChunkX == previousChunkX &&
+            playerChunkZ == previousChunkZ) {
+            return;
+        }
+
+        previousChunkX = playerChunkX;
+        previousChunkZ = playerChunkZ;
+
+        for (int x = playerChunkX - renderDistance;
+             x <= playerChunkX + renderDistance; x++) {
+
+            for (int z = playerChunkZ - renderDistance;
+                 z <= playerChunkZ + renderDistance; z++) {
+
+                boolean exists = false;
+
+                for (Chunk chunk : chunkList) {
+                    if (chunk.xChunk == x * 16 &&
+                        chunk.zChunk == z * 16) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists) {
+                    Chunk chunk = new Chunk(this);
+                    chunk.generatate(x * 16, 0, z * 16);
+                    chunkList.add(chunk);
+                }
+            }
+        }
+    }
+    static class BlockPos {
+        final int x, y, z;
+
+        BlockPos(int x, int y, int z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof BlockPos)) return false;
+
+            BlockPos other = (BlockPos) obj;
+
+            return x == other.x &&
+                   y == other.y &&
+                   z == other.z;
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(x, y, z);
+        }
+    }
+    public void addBlock(int x, int y, int z) {
+        blocks.add(new BlockPos(x, y, z));
+    }
+
+    public boolean isBlockAt(int x, int y, int z) {
+        return blocks.contains(new BlockPos(x, y, z));
     }
 
 }
